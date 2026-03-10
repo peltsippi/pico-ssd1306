@@ -78,8 +78,6 @@ namespace pico_ssd1306 {
         /// \param command - byte to be sent to controller
         int cmd(unsigned char command);
 
-        int write(const uint8_t *data, uint16_t len);
-
     public:
         /// \brief SSD1306 constructor initialized display and sets all required registers for operation
         /// \param i2CInst - i2c instance. Either i2c0 or i2c1

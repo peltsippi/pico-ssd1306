@@ -118,22 +118,17 @@ namespace pico_ssd1306 {
         memcpy(data + 1, frameBuffer.get(), FRAMEBUFFER_SIZE);
 
         // send data to device
-        
-        this->write(data, FRAMEBUFFER_SIZE + 1);
-        
+        absolute_time_t timeout = delayed_by_ms(get_absolute_time(), TIMEOUT);
+
+        i2c_write_blocking_until(this->i2CInst, this->address, data, FRAMEBUFFER_SIZE + 1, false, timeout);
+
+       
     }
 
     void SSD1306::clear() {
         this->frameBuffer.clear();
     }
 
-    int SSD1306::write(const uint8_t *data, uint16_t len) {
-
-        absolute_time_t timeout = delayed_by_ms(get_absolute_time(), TIMEOUT);
-
-        return i2c_write_blocking_until(this->i2CInst, this->address, data, FRAMEBUFFER_SIZE + 1, false, timeout);
-
-    }
 
     void SSD1306::setOrientation(bool orientation) {
         // remap columns and rows scan direction, effectively flipping the image on display
@@ -174,10 +169,9 @@ namespace pico_ssd1306 {
         // 0x00 is a byte indicating to ssd1306 that a command is being sent
         uint8_t data[2] = {0x00, command};
 
-        return this->write(data, 2);
+        absolute_time_t timeout = delayed_by_ms(get_absolute_time(), TIMEOUT);
 
-
-
+        return i2c_write_blocking_until(this->i2CInst, this->address, data, 2, false, timeout);
 
     }
 
