@@ -1,4 +1,5 @@
 #include "ssd1306.h"
+#include <stdio.h>
 
 namespace pico_ssd1306 {
     SSD1306::SSD1306(i2c_inst *i2CInst, uint16_t Address, Size size) {
@@ -6,7 +7,7 @@ namespace pico_ssd1306 {
         this->i2CInst = i2CInst;
         this->address = Address;
         this->size = size;
-
+  
         this->width = 128;
 
         if (size == Size::W128xH32) {
@@ -17,7 +18,6 @@ namespace pico_ssd1306 {
 
         // display is not inverted by default
         this->inverted = false;
-
         // this is a list of setup commands for the display
         uint8_t setup[] = {
                 SSD1306_DISPLAY_OFF,
@@ -57,17 +57,17 @@ namespace pico_ssd1306 {
                 SSD1306_DISPLAYALL_ON_RESUME,
                 SSD1306_DISPLAY_ON
         };
-
         // send each one of the setup commands
         for (uint8_t &command: setup) {
-            this->cmd(command);
+            if (this->cmd(command) == PICO_ERROR_TIMEOUT) {
+                printf("Timeout when attempting to communicate with the SSD1306 module!\n");
+                break;
+            }
         }
-
         // clear the buffer and send it to the display
         // if not done display shows garbage data
         this->clear();
         this->sendBuffer();
-
     }
 
     void SSD1306::setPixel(int16_t x, int16_t y, WriteMode mode) {
@@ -118,11 +118,21 @@ namespace pico_ssd1306 {
         memcpy(data + 1, frameBuffer.get(), FRAMEBUFFER_SIZE);
 
         // send data to device
-        i2c_write_blocking(this->i2CInst, this->address, data, FRAMEBUFFER_SIZE + 1, false);
+        
+        this->write(data, FRAMEBUFFER_SIZE + 1);
+        
     }
 
     void SSD1306::clear() {
         this->frameBuffer.clear();
+    }
+
+    int SSD1306::write(const uint8_t *data, uint16_t len) {
+
+        absolute_time_t timeout = delayed_by_ms(get_absolute_time(), TIMEOUT);
+
+        return i2c_write_blocking_until(this->i2CInst, this->address, data, FRAMEBUFFER_SIZE + 1, false, timeout);
+
     }
 
     void SSD1306::setOrientation(bool orientation) {
@@ -160,10 +170,15 @@ namespace pico_ssd1306 {
         inverted = !inverted;
     }
 
-    void SSD1306::cmd(unsigned char command) {
+    int SSD1306::cmd(unsigned char command) {
         // 0x00 is a byte indicating to ssd1306 that a command is being sent
         uint8_t data[2] = {0x00, command};
-        i2c_write_blocking(this->i2CInst, this->address, data, 2, false);
+
+        return this->write(data, 2);
+
+
+
+
     }
 
 

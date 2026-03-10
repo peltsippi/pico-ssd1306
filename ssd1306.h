@@ -6,6 +6,9 @@
 #include "frameBuffer/FrameBuffer.h"
 
 namespace pico_ssd1306 {
+
+    #define TIMEOUT             500
+
     /// Register addresses from datasheet
     enum REG_ADDRESSES : unsigned char{
         SSD1306_CONTRAST = 0x81,
@@ -73,7 +76,9 @@ namespace pico_ssd1306 {
 
         /// \brief Sends single 8bit command to ssd1306 controller
         /// \param command - byte to be sent to controller
-        void cmd(unsigned char command);
+        int cmd(unsigned char command);
+
+        int write(const uint8_t *data, uint16_t len);
 
     public:
         /// \brief SSD1306 constructor initialized display and sets all required registers for operation
