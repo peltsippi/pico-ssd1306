@@ -118,7 +118,9 @@ namespace pico_ssd1306 {
         memcpy(data + 1, frameBuffer.get(), FRAMEBUFFER_SIZE);
 
         // send data to device
-        absolute_time_t timeout = delayed_by_ms(get_absolute_time(), TIMEOUT);
+        absolute_time_t timeout = make_timeout_time_ms(TIMEOUT);
+
+
 
         i2c_write_blocking_until(this->i2CInst, this->address, data, FRAMEBUFFER_SIZE + 1, false, timeout);
 
